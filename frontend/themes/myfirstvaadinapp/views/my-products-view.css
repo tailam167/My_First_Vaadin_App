@@ -1,0 +1,24 @@
+.my-products-view {
+  display: block;
+  padding: 1em;
+}
+
+.my-products-view .content{
+  display: flex;
+}
+
+.my-products-view .contact-grid {
+  flex: 2;
+}
+
+.my-products-view .contact-form {
+  flex: 1;
+  padding: var(--lumo-space-m);
+}
+
+@media all and (max-width: 1100px) {
+  .list-view.editing .toolbar,
+  .list-view.editing .contact-grid {
+    display: none;
+  }
+}
