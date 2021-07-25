@@ -22,16 +22,8 @@ public class ProductService {
         this.productRepository = ProductRepository;
     }
 
-    public Product addProduct(Product product) {
-        return productRepository.save(product);
-    }
-
     public List<Product> findAllProduct() {
         return productRepository.findAll();
-    }
-
-    public Product updateProduct(Product product) {
-        return productRepository.save(product);
     }
 
     public Product findProductById(Integer productId) {

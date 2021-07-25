@@ -1,11 +1,13 @@
 package com.vaadin.application.model;
 
 import javax.persistence.*;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
 @Entity
 @Table(name = "product")
+@Cacheable
 public class Product {
 
     @Id
@@ -21,7 +23,7 @@ public class Product {
     private String productCode;
 
     @Column(name = "release_date")
-    private String releaseDate;
+    private Date releaseDate;
 
     @Column(name = "description")
     private String description;
@@ -36,7 +38,7 @@ public class Product {
     private String imageUrl;
 
     public Product(Integer productId, String productName, String productCode,
-                   String releaseDate, String description, Float price,
+                   Date releaseDate, String description, Float price,
                    Float starRating, String imageUrl) {
         this.productId = productId;
         this.productName = productName;
@@ -80,11 +82,11 @@ public class Product {
         this.productCode = productCode;
     }
 
-    public String getReleaseDate() {
+    public Date getReleaseDate() {
         return releaseDate;
     }
 
-    public void setReleaseDate(String releaseDate) {
+    public void setReleaseDate(Date releaseDate) {
         this.releaseDate = releaseDate;
     }
 
@@ -122,5 +124,19 @@ public class Product {
 
     public List<Product> getProducts() {
         return new LinkedList<>();
+    }
+
+    @Override
+    public String toString() {
+        return "Product{" +
+                "productId=" + productId +
+                ", productName='" + productName + '\'' +
+                ", productCode='" + productCode + '\'' +
+                ", releaseDate='" + releaseDate + '\'' +
+                ", description='" + description + '\'' +
+                ", price=" + price +
+                ", starRating=" + starRating +
+                ", imageUrl='" + imageUrl + '\'' +
+                '}';
     }
 }

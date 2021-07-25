@@ -36,9 +36,9 @@ public class MainLayout extends AppLayout {
 
     public static class MenuItemInfo {
 
-        private String text;
-        private String iconClass;
-        private Class<? extends Component> view;
+        private final String text;
+        private final String iconClass;
+        private final Class<? extends Component> view;
 
         public MenuItemInfo(String text, String iconClass, Class<? extends Component> view) {
             this.text = text;

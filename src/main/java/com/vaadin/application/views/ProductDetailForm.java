@@ -1,7 +1,6 @@
 package com.vaadin.application.views;
 
 import com.vaadin.application.model.Product;
-import com.vaadin.application.service.ProductService;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.Key;
@@ -11,7 +10,6 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -21,17 +19,13 @@ import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.converter.LocalDateToDateConverter;
 import com.vaadin.flow.data.converter.StringToFloatConverter;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
 import com.vaadin.flow.shared.Registration;
 
-import java.sql.Date;
+import java.util.Date;
+import java.util.List;
 
-@PageTitle("New Product")
-@Route(value = "create", layout = MainLayout.class)
-public class CreateProductForm extends FormLayout {
+public class ProductDetailForm extends FormLayout {
 
-    ProductService productService;
     TextField productName = new TextField("Product Name");
     TextField productCode = new TextField("Product Code");
     TextArea description = new TextArea("Product Description");
@@ -40,22 +34,21 @@ public class CreateProductForm extends FormLayout {
     TextField starRating = new TextField("Product Rating");
     TextField imageUrl = new TextField("Product Image URL");
 
-    Button saveNewBtn = new Button("Save");
+    Button saveBtn = new Button("Save");
+    Button deleteBtn = new Button("Delete");
     Button cancelBtn = new Button("Cancel");
 
     Binder<Product> binderProduct = new BeanValidationBinder<>(Product.class);
     private Product product;
-    boolean isValid = false;
 
     /**
-     * Constructor for CreateProductForm class
+     * Constructor for ProductDetailForm class
      *
      * @author tailam
      */
-    public CreateProductForm(ProductService productService) {
-        this.productService = productService;
-        addClassName("create-product-view");
-        validateCreateProductForm();
+    public ProductDetailForm(List<Product> products) {
+        addClassName("contact-form");
+        validateProductDetailForm();
         binderProduct.bindInstanceFields(this);
 
         // Layout for text field productName --> productReleaseDate by vertical
@@ -74,6 +67,7 @@ public class CreateProductForm extends FormLayout {
         // Layout for button Save and Cancel by horizontal
         HorizontalLayout btnLayout = new HorizontalLayout();
         btnLayout.add(getSaveBtn());
+        btnLayout.add(getDeleteBtn());
         btnLayout.add(getCancelBtn());
         verticalLayout1.add(btnLayout);
 
@@ -84,16 +78,14 @@ public class CreateProductForm extends FormLayout {
 
         // add layout to class and set alignment
         add(horizontalLayoutParent);
-
-        this.addListener(SaveEvent.class, this::saveNewProduct);
     }
 
     /**
-     * Validating fields in Create Product Form
+     * Validating fields in Product Detail Form
      *
      * @author tailam
      */
-    private void validateCreateProductForm() {
+    private void validateProductDetailForm() {
         binderProduct.forField(productName).asRequired("*Required")
                 .withValidator(
                         productName -> !productName.isBlank() && !productName.isEmpty(),
@@ -101,7 +93,7 @@ public class CreateProductForm extends FormLayout {
                 .withValidator(
                         name -> name.length() >= 3,
                         "*Name must contain at least 3 characters")
-                .bind(Product::getProductName, Product::setProductName);
+                .bind(com.vaadin.application.model.Product::getProductName, com.vaadin.application.model.Product::setProductName);
         binderProduct.forField(productCode).asRequired("*Required")
                 .withValidator(
                         productCode -> !productCode.isBlank() && !productCode.isEmpty(),
@@ -110,7 +102,7 @@ public class CreateProductForm extends FormLayout {
                         code -> code.length() >= 6 && code.contains("-"),
                         "*Code must contain at least 6 characters with format (characters-number)"
                 )
-                .bind(Product::getProductCode, Product::setProductCode);
+                .bind(com.vaadin.application.model.Product::getProductCode, com.vaadin.application.model.Product::setProductCode);
         binderProduct.forField(description).asRequired("*Required")
                 .withValidator(
                         description -> !description.isBlank() && !description.isEmpty(),
@@ -119,14 +111,14 @@ public class CreateProductForm extends FormLayout {
                         description -> description.length() <= 50,
                         "*Description have maximum with 50 characters"
                 )
-                .bind(Product::getDescription, Product::setDescription);
+                .bind(com.vaadin.application.model.Product::getDescription, com.vaadin.application.model.Product::setDescription);
         binderProduct.forField(releaseDate).asRequired("*Please choose a date by button")
                 .withConverter(new LocalDateToDateConverter())
                 .withValidator(
                         releaseDate -> !releaseDate.toString().isBlank() && !releaseDate.toString().isEmpty(),
                         "*Must have content"
                 )
-                .bind(Product::getReleaseDate, Product::setReleaseDate);
+                .bind(com.vaadin.application.model.Product::getReleaseDate, com.vaadin.application.model.Product::setReleaseDate);
         binderProduct.forField(price).asRequired("*Required")
                 .withValidator(
                         price -> !price.isBlank() && !price.isEmpty(),
@@ -137,7 +129,7 @@ public class CreateProductForm extends FormLayout {
                         "*Price must be between 1 and 10000"
                 )
                 .withConverter(new StringToFloatConverter("Must be a number"))
-                .bind(Product::getPrice, Product::setPrice);
+                .bind(com.vaadin.application.model.Product::getPrice, com.vaadin.application.model.Product::setPrice);
         binderProduct.forField(starRating).asRequired("*Required")
                 .withValidator(
                         starRating -> !starRating.isBlank() && !starRating.isEmpty(),
@@ -148,7 +140,7 @@ public class CreateProductForm extends FormLayout {
                         "*Star Rating must be between 1 and 5"
                 )
                 .withConverter(new StringToFloatConverter("Must be a number"))
-                .bind(Product::getStarRating, Product::setStarRating);
+                .bind(com.vaadin.application.model.Product::getStarRating, com.vaadin.application.model.Product::setStarRating);
         binderProduct.forField(imageUrl).asRequired("*Required")
                 .withValidator(
                         imageUrl -> !imageUrl.isBlank() && !imageUrl.isEmpty(),
@@ -157,7 +149,22 @@ public class CreateProductForm extends FormLayout {
                         imageUrl -> imageUrl.contains(".png"),
                         "*Must be .PNG file"
                 )
-                .bind(Product::getImageUrl, Product::setImageUrl);
+                .bind(com.vaadin.application.model.Product::getImageUrl, com.vaadin.application.model.Product::setImageUrl);
+    }
+
+    /**
+     * Reading product detail or create product
+     *
+     * @author tailam
+     */
+    public void setProduct(com.vaadin.application.model.Product product) {
+        this.product = product;
+        if (product != null && product.getProductId() != null) {
+            binderProduct.readBean(product);
+        } else {
+            binderProduct.readBean(new com.vaadin.application.model.Product(null, "",
+                    "", new Date(), "", 0F, 0F, ""));
+        }
     }
 
     /**
@@ -166,23 +173,15 @@ public class CreateProductForm extends FormLayout {
      * @return saveBtn
      */
     public Button getSaveBtn() {
-        saveNewBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-        saveNewBtn.addClickShortcut(Key.ENTER);
-        saveNewBtn.setIcon(new Icon(VaadinIcon.CLIPBOARD_CHECK));
-        saveNewBtn.addClickListener(click -> validateAndSave());
-        saveNewBtn.setEnabled(false);
-        binderProduct.addStatusChangeListener(evt -> saveNewBtn.setEnabled(binderProduct.isValid()));
-        return saveNewBtn;
-    }
-
-    /**
-     * Set New Product
-     *
-     * @author tailam
-     */
-    public void setProduct(Product product) {
-        this.product = product;
-        binderProduct.readBean(product);
+        saveBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        saveBtn.setIcon(new Icon(VaadinIcon.CLIPBOARD_CHECK));
+        saveBtn.addClickShortcut(Key.ENTER);
+        saveBtn.addClickListener(click -> {
+            validateAndSave();
+            binderProduct.validate();
+        });
+        binderProduct.addStatusChangeListener(evt -> saveBtn.setEnabled(binderProduct.isValid()));
+        return saveBtn;
     }
 
     /**
@@ -191,7 +190,6 @@ public class CreateProductForm extends FormLayout {
      * @author tailam
      */
     private void validateAndSave() {
-        addNewProduct(new Product());
         if (binderProduct.isValid()) {
             try {
                 binderProduct.writeBean(product);
@@ -203,54 +201,16 @@ public class CreateProductForm extends FormLayout {
     }
 
     /**
-     * Add New Product
+     * Button Delete
      *
-     * @author tailam
+     * @return deleteBtn
      */
-    private void addNewProduct(Product product) {
-        if (product == null) {
-            Notification.show("Your new product is invalid !");
-        } else {
-            product.setProductId(null);
-            product.setProductName(productName.getValue());
-            product.setProductCode(productCode.getValue());
-            product.setDescription(description.getValue());
-            product.setReleaseDate(Date.valueOf(releaseDate.getValue()));
-            product.setPrice(Float.valueOf(price.getValue()));
-            product.setStarRating(Float.valueOf(starRating.getValue()));
-            product.setImageUrl(imageUrl.getValue());
-            this.setProduct(product);
-            this.setVisible(true);
-            addClassName("create");
-        }
-    }
-
-    /**
-     * Save New Product
-     *
-     * @author tailam
-     */
-    private void saveNewProduct(SaveEvent evt) {
-        try {
-            productService.save(evt.getProduct());
-            isValid = true;
-        } catch (Exception exception) {
-            exception.printStackTrace();
-            isValid = false;
-        }
-        if (isValid) {
-            productName.clear();
-            productCode.clear();
-            description.clear();
-            releaseDate.clear();
-            price.clear();
-            starRating.clear();
-            imageUrl.clear();
-            Notification.show("Your new product is created !");
-        } else {
-            Notification.show("Your new product is invalid !");
-        }
-        getUI().ifPresent(ui -> ui.navigate("list"));
+    public Button getDeleteBtn() {
+        deleteBtn.addThemeVariants(ButtonVariant.LUMO_ERROR);
+        deleteBtn.setIcon(new Icon(VaadinIcon.TRASH));
+        deleteBtn.addClickShortcut(Key.DELETE);
+        deleteBtn.addClickListener(click -> fireEvent(new DeleteEvent(this, product)));
+        return deleteBtn;
     }
 
     /**
@@ -271,15 +231,15 @@ public class CreateProductForm extends FormLayout {
      *
      * @author tailam
      */
-    public static abstract class CreateProductFormEvent extends ComponentEvent<CreateProductForm> {
-        private final Product product;
+    public static abstract class ProductDetailFormEvent extends ComponentEvent<com.vaadin.application.views.ProductDetailForm> {
+        private final com.vaadin.application.model.Product product;
 
-        protected CreateProductFormEvent(CreateProductForm source, Product product) {
+        protected ProductDetailFormEvent(com.vaadin.application.views.ProductDetailForm source, com.vaadin.application.model.Product product) {
             super(source, false);
             this.product = product;
         }
 
-        public Product getProduct() {
+        public com.vaadin.application.model.Product getProduct() {
             return product;
         }
     }
@@ -289,10 +249,22 @@ public class CreateProductForm extends FormLayout {
      *
      * @author tailam
      */
-    public static class SaveEvent extends CreateProductFormEvent {
-        SaveEvent(CreateProductForm source, Product product) {
+    public static class SaveEvent extends ProductDetailFormEvent {
+        SaveEvent(com.vaadin.application.views.ProductDetailForm source, com.vaadin.application.model.Product product) {
             super(source, product);
         }
+    }
+
+    /**
+     * Delete Event
+     *
+     * @author tailam
+     */
+    public static class DeleteEvent extends ProductDetailFormEvent {
+        DeleteEvent(com.vaadin.application.views.ProductDetailForm source, com.vaadin.application.model.Product product) {
+            super(source, product);
+        }
+
     }
 
     /**
@@ -300,11 +272,9 @@ public class CreateProductForm extends FormLayout {
      *
      * @author tailam
      */
-    public class CloseEvent extends CreateProductFormEvent {
-        CloseEvent(CreateProductForm source) {
+    public static class CloseEvent extends ProductDetailFormEvent {
+        CloseEvent(com.vaadin.application.views.ProductDetailForm source) {
             super(source, null);
-            removeClassName("create");
-            getUI().ifPresent(ui -> ui.navigate("list"));
         }
     }
 
