@@ -1,0 +1,4 @@
+#Key and value types
+#Mon Jul 26 21:45:44 ICT 2021
+valueType=java.util.List
+keyType=org.springframework.cache.interceptor.SimpleKey

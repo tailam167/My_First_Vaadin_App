@@ -1,6 +1,7 @@
 package com.vaadin.application.views;
 
 import com.vaadin.application.config.SortDataValue;
+import com.vaadin.application.model.Product;
 import com.vaadin.application.service.ProductService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
@@ -23,16 +24,21 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * Product List View
+ *
+ * @author tailam
+ */
 @PageTitle("My Products")
 @Route(value = "list", layout = MainLayout.class)
 public class MyProductsView extends VerticalLayout {
 
     private final ProductDetailForm productDetailForm;
     private final ProductService productService;
-    Grid<com.vaadin.application.model.Product> grid = new Grid<>();
+    Grid<Product> grid = new Grid<>();
     TextField filterText = new TextField();
-    List<com.vaadin.application.model.Product> sortList;
-    ListDataProvider<com.vaadin.application.model.Product> listDataProvider;
+    List<Product> sortList;
+    ListDataProvider<Product> listDataProvider;
 
     /**
      * Constructor for MyProductsView class
@@ -73,26 +79,28 @@ public class MyProductsView extends VerticalLayout {
         grid.addClassName("contact-grid");
         grid.setSizeFull();
         grid.setItems(sortList);
-        grid.addColumn(com.vaadin.application.model.Product::getProductName, "productName").setHeader("Product Name");
-        grid.addColumn(com.vaadin.application.model.Product::getProductCode, "productCode").setHeader("Product Code");
+        grid.addColumn(Product::getProductName, "productName").setHeader("Product Name");
+        grid.addColumn(
+                productCode -> productCode.getProductCode().toUpperCase()
+                , "productCode").setHeader("Product Code");
         grid.addColumn(
                 releaseDate -> {
                     LocalDate localDate = LocalDate.ofInstant(releaseDate.getReleaseDate().toInstant(),
                             ZoneId.systemDefault());
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
                     return localDate.format(formatter);
-                }, "releaseDate"
-        ).setHeader("Release Date");
-        grid.addColumn(new NumberRenderer<>(com.vaadin.application.model.Product::getPrice,
+                }, "releaseDate").setHeader("Release Date");
+        grid.addColumn(new NumberRenderer<>(Product::getPrice,
                 "$%(,.2f",
                 Locale.US, "$0.00"), "price").setHeader("Price");
-        grid.addColumn(new NumberRenderer<>(com.vaadin.application.model.Product::getStarRating,
+        grid.addColumn(new NumberRenderer<>(Product::getStarRating,
                 new DecimalFormat("#.##")), "starRating").setHeader("Rating");
-        grid.addColumn(com.vaadin.application.model.Product::getImageUrl, "imageUrl").setHeader("Image");
+        grid.addColumn(Product::getImageUrl, "imageUrl").setHeader("Image");
         grid.setColumnReorderingAllowed(true);
         grid.setDataProvider(listDataProvider);
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
-        grid.asSingleSelect().addValueChangeListener(evt -> editProduct(evt.getValue()));
+        grid.addItemDoubleClickListener(event -> editProduct(event.getItem()));
+//        grid.asSingleSelect().addValueChangeListener(evt -> editProduct(evt.getValue()));
     }
 
     /**
@@ -118,7 +126,7 @@ public class MyProductsView extends VerticalLayout {
      *
      * @author tailam
      */
-    public void editProduct(com.vaadin.application.model.Product product) {
+    public void editProduct(Product product) {
         if (product == null) {
             closeEditor();
         } else {
@@ -145,7 +153,7 @@ public class MyProductsView extends VerticalLayout {
      * @author tailam
      */
     private void updateProduct(ProductDetailForm.SaveEvent evt) {
-        productService.save(evt.getProduct());
+        productService.updateProduct(evt.getProduct());
         listDataProvider.refreshItem(evt.getProduct());
         closeEditor();
     }

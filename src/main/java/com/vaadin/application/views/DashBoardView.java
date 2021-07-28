@@ -13,6 +13,11 @@ import com.vaadin.flow.router.Route;
 
 import java.util.Map;
 
+/**
+ * DashBoard View
+ *
+ * @author tailam
+ */
 @PageTitle("DashBoard")
 @Route(value = "dashboard", layout = MainLayout.class)
 public class DashBoardView extends VerticalLayout {

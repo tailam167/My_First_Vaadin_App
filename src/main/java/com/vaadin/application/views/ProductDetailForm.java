@@ -4,12 +4,14 @@ import com.vaadin.application.model.Product;
 import com.vaadin.flow.component.ComponentEvent;
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.Key;
+import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
-import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextArea;
@@ -21,10 +23,17 @@ import com.vaadin.flow.data.converter.LocalDateToDateConverter;
 import com.vaadin.flow.data.converter.StringToFloatConverter;
 import com.vaadin.flow.shared.Registration;
 
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Date;
 import java.util.List;
 
-public class ProductDetailForm extends FormLayout {
+/**
+ * Product Detail Form
+ *
+ * @author tailam
+ */
+public class ProductDetailForm extends Dialog {
 
     TextField productName = new TextField("Product Name");
     TextField productCode = new TextField("Product Code");
@@ -47,9 +56,25 @@ public class ProductDetailForm extends FormLayout {
      * @author tailam
      */
     public ProductDetailForm(List<Product> products) {
-        addClassName("contact-form");
+//        addClassName("dialog-contact-form");
         validateProductDetailForm();
         binderProduct.bindInstanceFields(this);
+        setProductDetailFormLayout();
+    }
+
+    /**
+     * Set layout for Product Detail Form
+     *
+     * @author tailam
+     */
+    public void setProductDetailFormLayout(){
+        productName.setPlaceholder("Product Name...");
+        productCode.setPlaceholder("Product Code...");
+        description.setPlaceholder("Product Description...");
+        releaseDate.setPlaceholder("Format MM/dd/yyyy...");
+        price.setPlaceholder("Product Price...");
+        starRating.setPlaceholder("Product Rating...");
+        imageUrl.setPlaceholder("Product Image URL...");
 
         // Layout for text field productName --> productReleaseDate by vertical
         VerticalLayout verticalLayout1 = new VerticalLayout();
@@ -57,6 +82,7 @@ public class ProductDetailForm extends FormLayout {
         verticalLayout1.add(productCode);
         verticalLayout1.add(description);
         verticalLayout1.add(releaseDate);
+        verticalLayout1.setWidth(50, Unit.PERCENTAGE);
 
         // Layout for text field productPrice --> imageUrl by vertical
         VerticalLayout verticalLayout2 = new VerticalLayout();
@@ -75,6 +101,8 @@ public class ProductDetailForm extends FormLayout {
         HorizontalLayout horizontalLayoutParent = new HorizontalLayout();
         horizontalLayoutParent.add(verticalLayout1);
         horizontalLayoutParent.add(verticalLayout2);
+        horizontalLayoutParent.setSpacing(false);
+        horizontalLayoutParent.setDefaultVerticalComponentAlignment(FlexComponent.Alignment.START);
 
         // add layout to class and set alignment
         add(horizontalLayoutParent);
@@ -86,6 +114,7 @@ public class ProductDetailForm extends FormLayout {
      * @author tailam
      */
     private void validateProductDetailForm() {
+        NumberFormat number = new DecimalFormat("##,###.00");
         binderProduct.forField(productName).asRequired("*Required")
                 .withValidator(
                         productName -> !productName.isBlank() && !productName.isEmpty(),
@@ -93,16 +122,17 @@ public class ProductDetailForm extends FormLayout {
                 .withValidator(
                         name -> name.length() >= 3,
                         "*Name must contain at least 3 characters")
-                .bind(com.vaadin.application.model.Product::getProductName, com.vaadin.application.model.Product::setProductName);
+                .bind(Product::getProductName, Product::setProductName);
         binderProduct.forField(productCode).asRequired("*Required")
                 .withValidator(
                         productCode -> !productCode.isBlank() && !productCode.isEmpty(),
                         "*Must have content")
                 .withValidator(
-                        code -> code.length() >= 6 && code.contains("-"),
-                        "*Code must contain at least 6 characters with format (characters-number)"
+                        productCode -> productCode.length() >= 6 && productCode.contains("-"),
+                        "*Code must contain at least 6 characters with correction format \n" +
+                                "*Example: ABC-1234"
                 )
-                .bind(com.vaadin.application.model.Product::getProductCode, com.vaadin.application.model.Product::setProductCode);
+                .bind(Product::getProductCode, Product::setProductCode);
         binderProduct.forField(description).asRequired("*Required")
                 .withValidator(
                         description -> !description.isBlank() && !description.isEmpty(),
@@ -111,36 +141,38 @@ public class ProductDetailForm extends FormLayout {
                         description -> description.length() <= 50,
                         "*Description have maximum with 50 characters"
                 )
-                .bind(com.vaadin.application.model.Product::getDescription, com.vaadin.application.model.Product::setDescription);
+                .bind(Product::getDescription, Product::setDescription);
         binderProduct.forField(releaseDate).asRequired("*Please choose a date by button")
                 .withConverter(new LocalDateToDateConverter())
                 .withValidator(
                         releaseDate -> !releaseDate.toString().isBlank() && !releaseDate.toString().isEmpty(),
                         "*Must have content"
                 )
-                .bind(com.vaadin.application.model.Product::getReleaseDate, com.vaadin.application.model.Product::setReleaseDate);
+                .bind(Product::getReleaseDate, Product::setReleaseDate);
         binderProduct.forField(price).asRequired("*Required")
                 .withValidator(
                         price -> !price.isBlank() && !price.isEmpty(),
                         "*Must have content by number"
                 )
                 .withValidator(
-                        price -> Float.parseFloat(price) >= 1F && Float.parseFloat(price) <= 10000F,
-                        "*Price must be between 1 and 10000"
+                        price -> Float.parseFloat(price.replace(",", "")) >= 1.00F &&
+                                Float.parseFloat(price.replace(",", "")) <= 10000.00F,
+                        "*Price must be between 1 and 10000 \n with correction format: ##,###.##"
                 )
                 .withConverter(new StringToFloatConverter("Must be a number"))
-                .bind(com.vaadin.application.model.Product::getPrice, com.vaadin.application.model.Product::setPrice);
+                .bind(Product::getPrice, Product::setPrice);
         binderProduct.forField(starRating).asRequired("*Required")
                 .withValidator(
                         starRating -> !starRating.isBlank() && !starRating.isEmpty(),
                         "*Must have content with number"
                 )
                 .withValidator(
-                        starRating -> Float.parseFloat(starRating) >= 1F && Float.parseFloat(starRating) <= 5F,
-                        "*Star Rating must be between 1 and 5"
+                        starRating -> Float.parseFloat(starRating) >= 1.00F &&
+                                Float.parseFloat(starRating) <= 5.00F,
+                        "*Star Rating must be between 1 and 5 \n with correction format: #.##"
                 )
                 .withConverter(new StringToFloatConverter("Must be a number"))
-                .bind(com.vaadin.application.model.Product::getStarRating, com.vaadin.application.model.Product::setStarRating);
+                .bind(Product::getStarRating, Product::setStarRating);
         binderProduct.forField(imageUrl).asRequired("*Required")
                 .withValidator(
                         imageUrl -> !imageUrl.isBlank() && !imageUrl.isEmpty(),
@@ -149,7 +181,7 @@ public class ProductDetailForm extends FormLayout {
                         imageUrl -> imageUrl.contains(".png"),
                         "*Must be .PNG file"
                 )
-                .bind(com.vaadin.application.model.Product::getImageUrl, com.vaadin.application.model.Product::setImageUrl);
+                .bind(Product::getImageUrl, Product::setImageUrl);
     }
 
     /**
@@ -157,12 +189,12 @@ public class ProductDetailForm extends FormLayout {
      *
      * @author tailam
      */
-    public void setProduct(com.vaadin.application.model.Product product) {
+    public void setProduct(Product product) {
         this.product = product;
         if (product != null && product.getProductId() != null) {
             binderProduct.readBean(product);
         } else {
-            binderProduct.readBean(new com.vaadin.application.model.Product(null, "",
+            binderProduct.readBean(new Product(null, "",
                     "", new Date(), "", 0F, 0F, ""));
         }
     }
@@ -232,14 +264,14 @@ public class ProductDetailForm extends FormLayout {
      * @author tailam
      */
     public static abstract class ProductDetailFormEvent extends ComponentEvent<com.vaadin.application.views.ProductDetailForm> {
-        private final com.vaadin.application.model.Product product;
+        private final Product product;
 
-        protected ProductDetailFormEvent(com.vaadin.application.views.ProductDetailForm source, com.vaadin.application.model.Product product) {
+        protected ProductDetailFormEvent(com.vaadin.application.views.ProductDetailForm source, Product product) {
             super(source, false);
             this.product = product;
         }
 
-        public com.vaadin.application.model.Product getProduct() {
+        public Product getProduct() {
             return product;
         }
     }
@@ -250,7 +282,7 @@ public class ProductDetailForm extends FormLayout {
      * @author tailam
      */
     public static class SaveEvent extends ProductDetailFormEvent {
-        SaveEvent(com.vaadin.application.views.ProductDetailForm source, com.vaadin.application.model.Product product) {
+        SaveEvent(com.vaadin.application.views.ProductDetailForm source, Product product) {
             super(source, product);
         }
     }
@@ -261,7 +293,7 @@ public class ProductDetailForm extends FormLayout {
      * @author tailam
      */
     public static class DeleteEvent extends ProductDetailFormEvent {
-        DeleteEvent(com.vaadin.application.views.ProductDetailForm source, com.vaadin.application.model.Product product) {
+        DeleteEvent(com.vaadin.application.views.ProductDetailForm source, Product product) {
             super(source, product);
         }
 

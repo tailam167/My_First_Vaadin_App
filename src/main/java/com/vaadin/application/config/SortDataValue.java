@@ -4,6 +4,11 @@ import com.vaadin.application.model.Product;
 
 import java.util.Comparator;
 
+/**
+ * Sorting data in dataprovider
+ *
+ * @author tailam
+ */
 public class SortDataValue implements Comparator<Product> {
 
     @Override

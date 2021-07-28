@@ -1,14 +1,19 @@
 package com.vaadin.application.model;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * Entity Product
+ *
+ * @author tailam
+ */
 @Entity
 @Table(name = "product")
-@Cacheable
-public class Product {
+public class Product implements Serializable {
 
     @Id
     @Column(name = "product_id")
@@ -124,19 +129,5 @@ public class Product {
 
     public List<Product> getProducts() {
         return new LinkedList<>();
-    }
-
-    @Override
-    public String toString() {
-        return "Product{" +
-                "productId=" + productId +
-                ", productName='" + productName + '\'' +
-                ", productCode='" + productCode + '\'' +
-                ", releaseDate='" + releaseDate + '\'' +
-                ", description='" + description + '\'' +
-                ", price=" + price +
-                ", starRating=" + starRating +
-                ", imageUrl='" + imageUrl + '\'' +
-                '}';
     }
 }

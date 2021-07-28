@@ -8,6 +8,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * Product Repository
+ *
+ * @author tailam
+ */
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Integer > {
     @Query("select p from Product p " +

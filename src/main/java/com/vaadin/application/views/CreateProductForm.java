@@ -26,7 +26,15 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.shared.Registration;
 
 import java.sql.Date;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
+/**
+ * Create Product Form
+ *
+ * @author tailam
+ */
 @PageTitle("New Product")
 @Route(value = "create", layout = MainLayout.class)
 public class CreateProductForm extends FormLayout {
@@ -57,6 +65,31 @@ public class CreateProductForm extends FormLayout {
         addClassName("create-product-view");
         validateCreateProductForm();
         binderProduct.bindInstanceFields(this);
+        setCreateProductFormLayout();
+        this.addListener(SaveEvent.class, this::saveNewProduct);
+    }
+
+    /**
+     * Set Layout for Create Product Form
+     *
+     * @author tailam
+     */
+    public void setCreateProductFormLayout(){
+        productName.setPlaceholder("Product Name...");
+        productCode.setPlaceholder("Product Code...");
+        description.setPlaceholder("Product Description...");
+        releaseDate.setPlaceholder("Format MM/dd/yyyy...");
+        price.setPlaceholder("Product Price...");
+        starRating.setPlaceholder("Product Rating...");
+        imageUrl.setPlaceholder("Product Image URL...");
+
+        productName.setWidthFull();
+        productCode.setWidthFull();
+        description.setWidthFull();
+        releaseDate.setWidthFull();
+        price.setWidthFull();
+        starRating.setWidthFull();
+        imageUrl.setWidthFull();
 
         // Layout for text field productName --> productReleaseDate by vertical
         VerticalLayout verticalLayout1 = new VerticalLayout();
@@ -84,8 +117,6 @@ public class CreateProductForm extends FormLayout {
 
         // add layout to class and set alignment
         add(horizontalLayoutParent);
-
-        this.addListener(SaveEvent.class, this::saveNewProduct);
     }
 
     /**
@@ -107,8 +138,9 @@ public class CreateProductForm extends FormLayout {
                         productCode -> !productCode.isBlank() && !productCode.isEmpty(),
                         "*Must have content")
                 .withValidator(
-                        code -> code.length() >= 6 && code.contains("-"),
-                        "*Code must contain at least 6 characters with format (characters-number)"
+                        productCode -> productCode.length() >= 6 && productCode.contains("-"),
+                        "*Code must contain at least 6 characters with correction format \n" +
+                                "*Example: ABC-1234"
                 )
                 .bind(Product::getProductCode, Product::setProductCode);
         binderProduct.forField(description).asRequired("*Required")
@@ -126,6 +158,15 @@ public class CreateProductForm extends FormLayout {
                         releaseDate -> !releaseDate.toString().isBlank() && !releaseDate.toString().isEmpty(),
                         "*Must have content"
                 )
+                .withValidator(
+                        releaseDate -> {
+                            LocalDate localDate = LocalDate.ofInstant(releaseDate.toInstant(),
+                                    ZoneId.systemDefault());
+                            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/dd/yyyy");
+                            return localDate.format(formatter).length() == 9;
+                        },
+                        "*Date must be valid, please choose date by button"
+                )
                 .bind(Product::getReleaseDate, Product::setReleaseDate);
         binderProduct.forField(price).asRequired("*Required")
                 .withValidator(
@@ -133,8 +174,9 @@ public class CreateProductForm extends FormLayout {
                         "*Must have content by number"
                 )
                 .withValidator(
-                        price -> Float.parseFloat(price) >= 1F && Float.parseFloat(price) <= 10000F,
-                        "*Price must be between 1 and 10000"
+                        price -> Float.parseFloat(price.replace(",", "")) >= 1.00F &&
+                                Float.parseFloat(price.replace(",", "")) <= 10000.00F,
+                        "*Price must be between 1 and 10000 \n with correction format: ##,###.##"
                 )
                 .withConverter(new StringToFloatConverter("Must be a number"))
                 .bind(Product::getPrice, Product::setPrice);
@@ -144,8 +186,9 @@ public class CreateProductForm extends FormLayout {
                         "*Must have content with number"
                 )
                 .withValidator(
-                        starRating -> Float.parseFloat(starRating) >= 1F && Float.parseFloat(starRating) <= 5F,
-                        "*Star Rating must be between 1 and 5"
+                        starRating -> Float.parseFloat(starRating) >= 1.00F &&
+                                Float.parseFloat(starRating) <= 5.00F,
+                        "*Star Rating must be between 1 and 5 \n with correction format: #.##"
                 )
                 .withConverter(new StringToFloatConverter("Must be a number"))
                 .bind(Product::getStarRating, Product::setStarRating);
