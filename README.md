@@ -2,6 +2,12 @@
 
 This project can be used as a starting point to create your own Vaadin application with Spring Boot.
 It contains all the necessary configuration and some placeholder files to get you started.
+Pre-condition for running project:
+1. Install Oracle Database & SQLDeveloper to config database
+	+ Run script demo_db.sql for importing data into table "PRODUCT" in database
+	+ Commit statement to save data from demo_db.sql file
+2. Install Maven and JDK to set up environment in project
+3. Start project by running main method in Application.java class
 
 ## Running the application
 The project is a standard Maven project. To run it from the command line,
@@ -24,7 +30,7 @@ Once the JAR file is built, you can run it using
 
 ## Project structure
 
-- `MainView.java` in `src/main/java` contains the navigation setup (i.e., the 
+- `MyProductView.java` in `src/main/java/com.vaadin.application.views` contains the navigation setup (i.e., the 
   side/top bar and the main menu). This setup uses 
   [App Layout](https://vaadin.com/components/vaadin-app-layout).
 - `views` package in `src/main/java` contains the server-side Java views of your application.
