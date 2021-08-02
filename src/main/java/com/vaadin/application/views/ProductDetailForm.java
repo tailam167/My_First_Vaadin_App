@@ -8,7 +8,8 @@ import com.vaadin.flow.component.Unit;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.datepicker.DatePicker;
-import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
@@ -33,7 +34,7 @@ import java.util.List;
  *
  * @author tailam
  */
-public class ProductDetailForm extends Dialog {
+public class ProductDetailForm extends FormLayout {
 
     TextField productName = new TextField("Product Name");
     TextField productCode = new TextField("Product Code");
@@ -56,7 +57,7 @@ public class ProductDetailForm extends Dialog {
      * @author tailam
      */
     public ProductDetailForm(List<Product> products) {
-//        addClassName("dialog-contact-form");
+        addClassName("contact-form");
         validateProductDetailForm();
         binderProduct.bindInstanceFields(this);
         setProductDetailFormLayout();
@@ -71,10 +72,12 @@ public class ProductDetailForm extends Dialog {
         productName.setPlaceholder("Product Name...");
         productCode.setPlaceholder("Product Code...");
         description.setPlaceholder("Product Description...");
-        releaseDate.setPlaceholder("Format MM/dd/yyyy...");
+        releaseDate.setPlaceholder("Format M/dd/yyyy...");
         price.setPlaceholder("Product Price...");
         starRating.setPlaceholder("Product Rating...");
         imageUrl.setPlaceholder("Product Image URL...");
+
+        price.setPrefixComponent(new Span("$"));
 
         // Layout for text field productName --> productReleaseDate by vertical
         VerticalLayout verticalLayout1 = new VerticalLayout();
@@ -263,10 +266,10 @@ public class ProductDetailForm extends Dialog {
      *
      * @author tailam
      */
-    public static abstract class ProductDetailFormEvent extends ComponentEvent<com.vaadin.application.views.ProductDetailForm> {
+    public static abstract class ProductDetailFormEvent extends ComponentEvent<ProductDetailForm> {
         private final Product product;
 
-        protected ProductDetailFormEvent(com.vaadin.application.views.ProductDetailForm source, Product product) {
+        protected ProductDetailFormEvent(ProductDetailForm source, Product product) {
             super(source, false);
             this.product = product;
         }
@@ -282,7 +285,7 @@ public class ProductDetailForm extends Dialog {
      * @author tailam
      */
     public static class SaveEvent extends ProductDetailFormEvent {
-        SaveEvent(com.vaadin.application.views.ProductDetailForm source, Product product) {
+        SaveEvent(ProductDetailForm source, Product product) {
             super(source, product);
         }
     }
@@ -293,7 +296,7 @@ public class ProductDetailForm extends Dialog {
      * @author tailam
      */
     public static class DeleteEvent extends ProductDetailFormEvent {
-        DeleteEvent(com.vaadin.application.views.ProductDetailForm source, Product product) {
+        DeleteEvent(ProductDetailForm source, Product product) {
             super(source, product);
         }
 
@@ -305,7 +308,7 @@ public class ProductDetailForm extends Dialog {
      * @author tailam
      */
     public static class CloseEvent extends ProductDetailFormEvent {
-        CloseEvent(com.vaadin.application.views.ProductDetailForm source) {
+        CloseEvent(ProductDetailForm source) {
             super(source, null);
         }
     }

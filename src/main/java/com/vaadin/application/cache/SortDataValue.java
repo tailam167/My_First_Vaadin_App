@@ -1,4 +1,4 @@
-package com.vaadin.application.config;
+package com.vaadin.application.cache;
 
 import com.vaadin.application.model.Product;
 

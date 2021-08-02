@@ -36,7 +36,7 @@ public class ProductService {
      *
      * @return listProduct
      */
-    @Cacheable(cacheNames = "findAllProductCache")
+    @Cacheable(cacheNames = "findAllProductCache", key = "'ALL'")
     public List<Product> findAllProduct() {
         return productRepository.findAll();
     }
@@ -44,11 +44,13 @@ public class ProductService {
     /**
      * Delete product
      *
+     * @return product
      * @author tailam
      */
-    @CacheEvict(cacheNames = "deleteProductCache", key = "#product")
-    public void deleteProduct(Product product) {
+    @CacheEvict(cacheNames = "deleteProductCache", key = "#product", allEntries = true)
+    public Product deleteProduct(Product product) {
         productRepository.delete(product);
+        return product;
     }
 
     /**
@@ -56,8 +58,8 @@ public class ProductService {
      *
      * @author tailam
      */
-    @CachePut(cacheNames = "updateProductCache", key = "#product", unless = "#result==null")
-    public Product updateProduct(Product product){
+    @CachePut(cacheNames = "updateProductCache", key = "#product", unless = "#product!=null")
+    public Product updateProduct(Product product) {
         if (product == null) {
             LOGGER.log(Level.SEVERE,
                     "Product is null. Are you sure you have connected your form to the application?");
@@ -71,7 +73,6 @@ public class ProductService {
      *
      * @author tailam
      */
-    @Cacheable(cacheNames = "saveCache", key = "#product")
     public void save(Product product) {
         if (product == null) {
             LOGGER.log(Level.SEVERE,
@@ -79,20 +80,6 @@ public class ProductService {
             return;
         }
         productRepository.save(product);
-    }
-
-    /**
-     * Find product
-     *
-     * @return listProduct
-     */
-    @Cacheable(cacheNames = "findFilterProductCache", key = "#filterText")
-    public List<Product> findFilterProduct(String filterText) {
-        if(filterText == null || filterText.isEmpty()) {
-            return productRepository.findAll();
-        } else  {
-            return  productRepository.search(filterText);
-        }
     }
 
     /**

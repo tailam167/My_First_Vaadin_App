@@ -1,9 +1,9 @@
 package com.vaadin.application.views;
 
-import com.vaadin.application.config.SortDataValue;
+import com.vaadin.application.cache.ProductCacheService;
+import com.vaadin.application.cache.SortDataValue;
 import com.vaadin.application.model.Product;
 import com.vaadin.application.service.ProductService;
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.Icon;
@@ -14,6 +14,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.NumberRenderer;
+import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
@@ -33,6 +34,7 @@ import java.util.Locale;
 @Route(value = "list", layout = MainLayout.class)
 public class MyProductsView extends VerticalLayout {
 
+    private final ProductCacheService productCacheService;
     private final ProductDetailForm productDetailForm;
     private final ProductService productService;
     Grid<Product> grid = new Grid<>();
@@ -45,11 +47,13 @@ public class MyProductsView extends VerticalLayout {
      *
      * @author tailam
      */
-    public MyProductsView(ProductService productService) {
+    public MyProductsView(ProductCacheService productCacheService, ProductService productService) {
+        this.productCacheService = productCacheService;
         this.productService = productService;
-        sortList = productService.findAllProduct();
+        sortList = productCacheService.findAllProductCache();
         sortList.sort(new SortDataValue());
         listDataProvider = DataProvider.ofCollection(sortList);
+
         addClassName("my-products-view");
         setSizeFull();
         configureGrid();
@@ -99,8 +103,8 @@ public class MyProductsView extends VerticalLayout {
         grid.setColumnReorderingAllowed(true);
         grid.setDataProvider(listDataProvider);
         grid.getColumns().forEach(col -> col.setAutoWidth(true));
-        grid.addItemDoubleClickListener(event -> editProduct(event.getItem()));
-//        grid.asSingleSelect().addValueChangeListener(evt -> editProduct(evt.getValue()));
+//        grid.addItemDoubleClickListener(event -> editProduct(event.getItem()));
+        grid.asSingleSelect().addValueChangeListener(evt -> editProduct(evt.getValue()));
     }
 
     /**
@@ -111,12 +115,12 @@ public class MyProductsView extends VerticalLayout {
     private HorizontalLayout getConfigFilter() {
         filterText.setPlaceholder("Looking for...");
         filterText.setClearButtonVisible(true);
-        //filterText.setValueChangeMode(ValueChangeMode.LAZY);
+        Icon icon = VaadinIcon.SEARCH.create();
+        filterText.setPrefixComponent(icon);
+        filterText.setValueChangeMode(ValueChangeMode.LAZY);
         filterText.addValueChangeListener(e -> filterList());
-        Button searchBtn = new Button("Search", buttonClickEvent -> filterList());
-        searchBtn.setIcon(new Icon(VaadinIcon.SEARCH));
 
-        HorizontalLayout toolbar = new HorizontalLayout(filterText, searchBtn);
+        HorizontalLayout toolbar = new HorizontalLayout(filterText);
         toolbar.addClassName("toolbar");
         return toolbar;
     }
@@ -143,6 +147,7 @@ public class MyProductsView extends VerticalLayout {
      */
     private void deleteProduct(ProductDetailForm.DeleteEvent evt) {
         productService.deleteProduct(evt.getProduct());
+        productCacheService.deleteProductCache(evt.getProduct());
         listDataProvider.getItems().remove(evt.getProduct());
         closeEditor();
     }
@@ -154,6 +159,7 @@ public class MyProductsView extends VerticalLayout {
      */
     private void updateProduct(ProductDetailForm.SaveEvent evt) {
         productService.updateProduct(evt.getProduct());
+        productCacheService.updateProductCache(evt.getProduct());
         listDataProvider.refreshItem(evt.getProduct());
         closeEditor();
     }
@@ -187,10 +193,16 @@ public class MyProductsView extends VerticalLayout {
      */
     public void filterList() {
         if (filterText.getValue() != null) {
-            listDataProvider = DataProvider.ofCollection(productService.findFilterProduct(filterText.getValue()));
+            listDataProvider.setFilter(product ->
+                    product.getProductName().toLowerCase().contains(filterText.getValue().toLowerCase()) ||
+                            product.getProductCode().toLowerCase().contains(filterText.getValue().toLowerCase()) ||
+                            product.getDescription().toLowerCase().contains(filterText.getValue().toLowerCase()) ||
+                            product.getReleaseDate().toString().contains(filterText.getValue()) ||
+                            product.getPrice().toString().contains(filterText.getValue()) ||
+                            product.getStarRating().toString().contains(filterText.getValue()) ||
+                            product.getImageUrl().toLowerCase().contains(filterText.getValue().toLowerCase()));
         } else {
-            listDataProvider = DataProvider.ofCollection(productService.findAllProduct());
+            listDataProvider.clearFilters();
         }
-        grid.setDataProvider(listDataProvider);
     }
 }

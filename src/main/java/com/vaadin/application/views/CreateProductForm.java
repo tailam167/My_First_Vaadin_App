@@ -78,7 +78,7 @@ public class CreateProductForm extends FormLayout {
         productName.setPlaceholder("Product Name...");
         productCode.setPlaceholder("Product Code...");
         description.setPlaceholder("Product Description...");
-        releaseDate.setPlaceholder("Format MM/dd/yyyy...");
+        releaseDate.setPlaceholder("Format M/dd/yyyy...");
         price.setPlaceholder("Product Price...");
         starRating.setPlaceholder("Product Rating...");
         imageUrl.setPlaceholder("Product Image URL...");
